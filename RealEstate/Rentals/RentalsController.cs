@@ -1,23 +1,41 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using RealEstate.Controllers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using RealEstate.Utilities;
 
 namespace RealEstate.Rentals
 {
     public class RentalsController : Controller
     {
-        // GET: Rentals/Create
+
+        public readonly RealEstateContext Context = new RealEstateContext();
+
+        // GET: Rentals
+        public async Task<ActionResult> Index()
+        {
+            var filter = new BsonDocument();
+            var rentals = await Context.Rentals.FindAsync<Rental>(filter).ToListAsync();            
+            return View(rentals);
+        }
+
+
+        // GET: Rentals/Post
         public ActionResult Post()
         {
             return View();
         }
 
-        // GET: Rentals
-        public ActionResult Index()
+        [HttpPost]
+        public async Task<ActionResult> Post(PostRental postRental)
         {
-            return View();
+            var rental = new Rental(postRental);
+            await Context.Rentals.InsertOneAsync(rental);
+            return RedirectToAction("Index");
         }
 
         // GET: Rentals/Details/5
