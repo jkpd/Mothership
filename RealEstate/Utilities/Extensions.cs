@@ -24,5 +24,13 @@ namespace RealEstate.Utilities
             await cursor.ForEachAsync(d => list.Add(d));
             return list;
         }
+
+        public static async Task<T> FindOneAsync<T>(this Task<IAsyncCursor<T>> task)
+        {
+            var list = new List<T>();
+            var cursor = await task;
+            await cursor.ForEachAsync(d => list.Add(d));
+            return list.SingleOrDefault();
+        }
     }
 }
