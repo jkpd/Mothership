@@ -44,11 +44,11 @@
                     @Html.DisplayFor(modelItem => item.Price)
                 </td>
                 <td>
-                    @item.Adjustments.Select(a => a.Describe()).FirstOrDefault()
+                    @item.Adjustments.Select(a => a.Describe()).LastOrDefault()
                 </td>
 
                 <td>
-                    @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
+                    @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |
                     @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
                     @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ }) |
                     @Html.ActionLink("Adjust Price", "AdjustPrice", new { Id = item.Id})

@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using RealEstate.Controllers;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,7 @@ namespace RealEstate.Rentals
             return View(rental);
         }
 
+        //Replacing
         [HttpPost]
         public async Task<ActionResult> AdjustPrice(string id, AdjustPrice adjustPrice)
         {
@@ -53,6 +55,21 @@ namespace RealEstate.Rentals
             await Context.Rentals.ReplaceOneAsync(filter, rental);
             return RedirectToAction("Index");
         }
+
+        //Modification
+        [HttpPost]
+        public async Task<ActionResult> AdjustPrice_RemoveThisBitToMakeMeActive(string id, AdjustPrice adjustPrice)
+        {
+            var rental = await GetRental(id);
+            var adjustment = new PriceAdjustment(adjustPrice, rental.Price);
+            var filter = Builders<Rental>.Filter.Eq(r => r.Id, id);
+            var update = Builders<Rental>
+                .Update.Push(r => r.Adjustments, adjustment)
+                .Set(r => r.Price, adjustPrice.NewPrice);
+            await Context.Rentals.UpdateOneAsync(filter, update);            
+            return RedirectToAction("Index");
+        }
+
 
         private async Task<Rental> GetRental(string id)
         {
@@ -88,19 +105,24 @@ namespace RealEstate.Rentals
             }
         }
 
-        // GET: Rentals/Edit/5
-        public ActionResult Edit(int id)
+        // GET: Rentals/Edit/5        
+        public async Task<ActionResult> Edit(string id)
         {
-            return View();
+            var filter = new BsonDocument("_id", new ObjectId(id));
+            var rental = await Context.Rentals.Find(filter).FirstOrDefaultAsync();
+            var postRental = new PostRental
+            {
+                //TODO: Edit is not ready yet
+            };
+            return View(rental);
         }
 
         // POST: Rentals/Edit/5
         [HttpPost]
-        public ActionResult Edit(int id, FormCollection collection)
+        public ActionResult Edit(string id, PostRental postRental)
         {
             try
             {
-                // TODO: Add update logic here
 
                 return RedirectToAction("Index");
             }
