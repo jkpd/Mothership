@@ -11,9 +11,12 @@ namespace RealEstate.Controllers
 
         public RealEstateContext()
         {
+            //Connect to CoreControl
+            //var client = new MongoClient("mongodb://MongoDB-1.corethree-ltda.8260.mongodbdns.com");
+            //Database = client.GetDatabase("Corethree");
+
             var client = new MongoClient(Settings.Default.RealEstateConnectionString);
-            Database = client.GetDatabase(Settings.Default.RealEstateDatabaseName);
-            //var collection = Database.GetCollection<BsonDocument>("test");
+            Database = client.GetDatabase(Settings.Default.RealEstateDatabaseName);            
         }
 
         public IMongoCollection<Rental> Rentals
@@ -23,6 +26,15 @@ namespace RealEstate.Controllers
                 return Database.GetCollection<Rental>("rentals");
             }
         }
+
+        public IMongoCollection<Models.GenericData_Alerts> GenericData_Alerts
+        {
+            get
+            {
+                return Database.GetCollection<Models.GenericData_Alerts>("GenericData_Alerts"); ;
+            }
+        }
+
 
     }
 }

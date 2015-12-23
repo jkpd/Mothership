@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using RealEstate.Controllers;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,44 @@ namespace RealEstate.Rentals
         public readonly RealEstateContext Context = new RealEstateContext();
 
         // GET: Rentals
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(RentalFilter filter)
         {
-            var filter = new BsonDocument();
-            var rentals = await Context.Rentals.FindAsync<Rental>(filter).ToListAsync();            
-            return View(rentals);
+            IEnumerable<Rental> rentals = null;
+            if (filter == null)
+            {
+                var bsonFilter = new BsonDocument();
+                //Simple test for CoreControl
+                //var generic = await Context.GenericData_Alerts.FindAsync<Models.GenericData_Alerts>(filter).ToListAsync();
+                rentals = await Context.Rentals.FindAsync<Rental>(bsonFilter).ToListAsync();
+            }
+            else
+                rentals = await FilterRentals(filter);
+
+            var model = new RentalsList
+            {
+                RentalFilter = filter,
+                Rentals = rentals
+            };
+            return View(model);
+        }
+
+        /// <summary>
+        /// Filter Rentals
+        /// USING MongoDB.Driver.Linq
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        private async Task<IEnumerable<Rental>> FilterRentals(RentalFilter filter)
+        {            
+            var collection = Context.Rentals.AsQueryable();
+            IMongoQueryable<Rental> query = collection;
+            if (filter.PriceLimit != null)
+                query = collection.Where(d => d.Price <= filter.PriceLimit);
+            if (filter.SortBy == RentalFilter.SortOptions.Price)
+                query = query.OrderBy(d => d.Price);
+            else
+                query = query.OrderBy(d => d.Address);
+            return await query.ToListAsync();
         }
 
         // GET: Rentals/Post
@@ -45,7 +79,13 @@ namespace RealEstate.Rentals
             return View(rental);
         }
 
-        //Replacing
+        /// <summary>
+        /// Replacing using FilterDefinition 
+        /// USING REPLACE
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="adjustPrice"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<ActionResult> AdjustPrice(string id, AdjustPrice adjustPrice)
         {
@@ -56,7 +96,13 @@ namespace RealEstate.Rentals
             return RedirectToAction("Index");
         }
 
-        //Modification
+        /// <summary>
+        /// Modification using Builders (Currently inactive)
+        /// USING UPDATE
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="adjustPrice"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<ActionResult> AdjustPrice_RemoveThisBitToMakeMeActive(string id, AdjustPrice adjustPrice)
         {
@@ -64,9 +110,10 @@ namespace RealEstate.Rentals
             var adjustment = new PriceAdjustment(adjustPrice, rental.Price);
             var filter = Builders<Rental>.Filter.Eq(r => r.Id, id);
             var update = Builders<Rental>
-                .Update.Push(r => r.Adjustments, adjustment)
+                .Update
+                .Push(r => r.Adjustments, adjustment)
                 .Set(r => r.Price, adjustPrice.NewPrice);
-            await Context.Rentals.UpdateOneAsync(filter, update);            
+            await Context.Rentals.UpdateOneAsync(filter, update);
             return RedirectToAction("Index");
         }
 

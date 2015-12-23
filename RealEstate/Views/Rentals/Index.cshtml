@@ -1,10 +1,22 @@
-﻿@model IEnumerable<RealEstate.Rentals.Rental>
+﻿@model RealEstate.Rentals.RentalsList
 
 @{
     ViewBag.Title = "Index";
 }
 
-<h2>Index</h2>
+<h2>Rental Listings</h2>
+@using (Html.BeginForm())
+{
+    <label for="PriceLimit">Price Limit</label>    
+    @Html.TextBox("PriceLimit", Model.RentalFilter.PriceLimit);
+    //htmlAttributes: new { @type = "text" }
+    //@Html.EnumDropDownListFor(model => model.RentalFilter.SortBy);
+    <select data-val="true" data-val-required="The SortBy field is required." id="RentalFilter_SortBy" name="SortBy">
+        <option selected="selected" value="0">Rental Name</option>
+        <option value="1">Price</option>
+    </select>
+    <input type="submit" value="Filter" />
+}
 
 <p>
     @Html.ActionLink("Post Rental", "Post")
@@ -12,23 +24,23 @@
 <table class="table">
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.Description)
+            Description
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.NumberOfRooms)
+            Number Of Rooms
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Address)
+            Address
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Price)
+            Price
         </th>
         <th></th>
     </tr>
 
-    @if (Model != null && Model.Any())
+    @if (Model.Rentals != null && Model.Rentals.Any())
     {
-        foreach (var item in Model)
+        foreach (var item in Model.Rentals)
         {
             <tr>
                 <td>
